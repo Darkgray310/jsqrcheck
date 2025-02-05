@@ -89,7 +89,9 @@
     });
 
     function tick() {
-      //if (isProcessing) return;  // すでに処理中なら戻る
+      if (isProcessing){
+        return;  // すでに処理中なら戻る
+      }
       loadingMessage.innerText = "⌛ Loading video..."
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         loadingMessage.hidden = true;
