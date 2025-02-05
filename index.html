@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRコード読み取り</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+</head>
+<body>
+    <h1>QRコードをスキャンしてください</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        // ビデオとキャンバスの要素を取得
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // カメラのストリームを取得
+        async function setupCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        }
+
+        // QRコードの読み取り処理
+        function readQRCode() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // キャンバスの画像からQRコードを検出
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+                if (code) {
+                    // QRコードが検出された場合
+                    console.log("QRコードが検出されました:", code.data);
+                    
+                    // 特定のURLの場合に遷移
+                    const url = code.data;
+                    const targetUrl = "https://example.com"; // 検出するURL
+                    if (url.includes(targetUrl)) {
+                        window.location.href = url; // URLに遷移
+                    }
+                }
+            }
+            requestAnimationFrame(readQRCode);
+        }
+
+        // カメラをセットアップして読み取りを開始
+        setupCamera().then(() => {
+            readQRCode();
+        }).catch(err => {
+            console.error('カメラの取得に失敗しました:', err);
+        });
+    </script>
+</body>
+</html>
