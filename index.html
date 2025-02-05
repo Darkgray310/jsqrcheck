@@ -72,7 +72,7 @@
                     
                     // 特定のURLの場合に遷移
                     const url = code.data;
-                    const targetUrl = "https://yahoo.co.jp"; // 検出するURL
+                    const targetUrl = "qr"; // 検出するURL
                     if (url.includes(targetUrl)) {
                         window.location.href = url; // URLに遷移
                     }
@@ -94,7 +94,7 @@
         // 初回カメラセットアップ
         getCameraDevices().then(devices => {
             if (devices.length > 0) {
-                currentDeviceId = devices[0].deviceId; // 最初のカメラを使用
+                currentDeviceId = devices[1].deviceId; // 最初のカメラを使用
                 setupCamera(currentDeviceId).then(() => {
                     readQRCode(); // QRコード読み取りを開始
                 });
