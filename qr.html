@@ -89,6 +89,8 @@
     });
 
     function tick() {
+      if (isProcessing) return;  // すでに処理中なら戻る
+      isProcessing = true;  // 処理中フラグを立てる
       loadingMessage.innerText = "⌛ Loading video..."
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         loadingMessage.hidden = true;
@@ -115,6 +117,9 @@
           const targetUrl = "qr"; // 検出するURL
           if (url.includes(targetUrl)) {
               window.location.href = url; // URLに遷移
+              setTimeout(() => {
+                 isProcessing = false;  // 処理中フラグをリセット
+              }, 1000);  // 1秒待機後に次のQRコード読み取りを許可
           }
         } else {
           outputMessage.hidden = false;
