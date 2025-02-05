@@ -5,22 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QRコード読み取り</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        #video {
+            width: 100%;
+            height: auto;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>QRコードをスキャンしてください</h1>
-    <video id="video" width="640" height="480" autoplay></video>
+    <video id="video" autoplay></video>
     <canvas id="canvas" style="display:none;"></canvas>
+    <div id="controls">
+        <button id="toggleCamera">カメラ切り替え</button>
+    </div>
 
     <script>
-        // ビデオとキャンバスの要素を取得
+        let currentStream;
+        let currentDeviceId = null;
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
+        const toggleCameraButton = document.getElementById('toggleCamera');
 
-        // カメラのストリームを取得
-        async function setupCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
+        // 使用可能なカメラデバイスを取得
+        async function getCameraDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            return videoDevices;
+        }
+
+        // カメラを設定
+        async function setupCamera(deviceId = null) {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop()); // 前回のストリームを停止
+            }
+
+            const constraints = deviceId ? { video: { deviceId: { exact: deviceId } } } : { video: true };
+            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = currentStream;
         }
 
         // QRコードの読み取り処理
@@ -40,7 +72,7 @@
                     
                     // 特定のURLの場合に遷移
                     const url = code.data;
-                    const targetUrl = "https://example.com"; // 検出するURL
+                    const targetUrl = "https://yahoo.co.jp"; // 検出するURL
                     if (url.includes(targetUrl)) {
                         window.location.href = url; // URLに遷移
                     }
@@ -49,9 +81,26 @@
             requestAnimationFrame(readQRCode);
         }
 
-        // カメラをセットアップして読み取りを開始
-        setupCamera().then(() => {
-            readQRCode();
+        // カメラ切り替えボタンの処理
+        toggleCameraButton.addEventListener('click', async () => {
+            const devices = await getCameraDevices();
+            const currentIndex = devices.findIndex(device => device.deviceId === currentDeviceId);
+            const nextDeviceId = devices[(currentIndex + 1) % devices.length].deviceId;
+            currentDeviceId = nextDeviceId;
+
+            setupCamera(currentDeviceId); // 新しいカメラデバイスに切り替え
+        });
+
+        // 初回カメラセットアップ
+        getCameraDevices().then(devices => {
+            if (devices.length > 0) {
+                currentDeviceId = devices[0].deviceId; // 最初のカメラを使用
+                setupCamera(currentDeviceId).then(() => {
+                    readQRCode(); // QRコード読み取りを開始
+                });
+            } else {
+                alert("カメラが見つかりませんでした");
+            }
         }).catch(err => {
             console.error('カメラの取得に失敗しました:', err);
         });
