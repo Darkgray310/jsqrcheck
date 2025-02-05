@@ -110,6 +110,12 @@
           outputMessage.hidden = true;
           outputData.parentElement.hidden = false;
           outputData.innerText = code.data;
+          // 特定のURLの場合に遷移
+          const url = code.data;
+          const targetUrl = "qr"; // 検出するURL
+          if (url.includes(targetUrl)) {
+              window.location.href = url; // URLに遷移
+          }
         } else {
           outputMessage.hidden = false;
           outputData.parentElement.hidden = true;
